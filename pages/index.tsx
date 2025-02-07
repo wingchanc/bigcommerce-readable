@@ -1,5 +1,5 @@
 import { Box as MuiBox, Container, Grid, Typography, Paper } from '@mui/material';
-import { TextFields, AccessibilityNew, Navigation, RecordVoiceOver } from '@mui/icons-material';
+import { AccessibilityNew, Navigation, RecordVoiceOver, TextFields } from '@mui/icons-material';
 import { Box, Flex, H4, Panel, Switch } from "@bigcommerce/big-design";
 import ErrorMessage from "../components/error";
 import Loading from "../components/loading";

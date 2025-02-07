@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { useSession } from '../context/session';
-import { ErrorProps, ListItem, Order, QueryParams, ShippingAndProductsInfo } from '../types';
+import { ErrorProps } from '../types';
 
 async function fetcher(url: string, query: string) {
     const res = await fetch(`${url}?${query}`);
@@ -16,85 +16,37 @@ async function fetcher(url: string, query: string) {
     return res.json();
 }
 
-// Reusable SWR hooks
-// https://swr.vercel.app/
-export function useProducts() {
+export function useScripts() {
     const { context } = useSession();
     const params = new URLSearchParams({ context }).toString();
-    // Request is deduped and cached; Can be shared across components
-    const { data, error } = useSWR(context ? ['/api/products', params] : null, fetcher);
+    const { data: scripts, error, mutate } = useSWR(context ? ['/api/scripts', params] : null, fetcher);
 
-    return {
-        summary: data,
-        isLoading: !data && !error,
-        error,
+    const toggleScript = async (scriptId: string | undefined, enabled: boolean) => {
+        try {
+            const response = await fetch(`/api/scripts?${params}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ scriptId, enabled }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to toggle script');
+            }
+            
+            await mutate(); // Refresh the scripts data
+        } catch (error) {
+            console.error('Error toggling script:', error);
+            throw error;
+        }
     };
-}
-
-export function useProductList(query?: QueryParams) {
-    const { context } = useSession();
-    const params = new URLSearchParams({ ...query, context }).toString();
-
-    // Use an array to send multiple arguments to fetcher
-    const { data, error, mutate: mutateList } = useSWR(context ? ['/api/products/list', params] : null, fetcher);
 
     return {
-        list: data?.data,
-        meta: data?.meta,
-        isLoading: !data && !error,
+        scripts,
+        isLoading: !scripts && !error,
         error,
-        mutateList,
-    };
-}
-
-export function useProductInfo(pid: number, list?:ListItem[]) {
-    const { context } = useSession();
-    const params = new URLSearchParams({ context }).toString();
-
-    let product: ListItem; 
-
-    if (list?.length) { 
-       product = list.find(item => item.id === pid);
-    }
-
-    // Conditionally fetch product if it doesn't exist in the list (e.g. deep linking)
-    const { data, error } = useSWR(!product && context ? [`/api/products/${pid}`, params] : null, fetcher);
-
-    return {
-        product: product ?? data,
-        isLoading: product ? false : (!data && !error),
-        error,
-    };
-}
-
-export const useOrder = (orderId: number) => {
-    const { context } = useSession();
-    const params = new URLSearchParams({ context }).toString();
-    const shouldFetch = context && orderId !== undefined;
-
-    // Conditionally fetch orderId is defined
-    const { data, error } = useSWR<Order, ErrorProps>(shouldFetch ? [`/api/orders/${orderId}`, params] : null, fetcher);
-
-    return {
-        order: data,
-        isLoading: !data && !error,
-        error,
-    };
-}
-
-export const useShippingAndProductsInfo = (orderId: number) => {
-    const { context } = useSession();
-    const params = new URLSearchParams({ context }).toString();
-    const shouldFetch = context && orderId !== undefined;
-
-    // Shipping addresses and products are not included in the order data and need to be fetched separately
-    const { data, error } = useSWR<ShippingAndProductsInfo, ErrorProps>(
-        shouldFetch ? [`/api/orders/${orderId}/shipping_products`, params] : null, fetcher
-    );
-
-    return {
-        order: data,
-        isLoading: !data && !error,
-        error,
+        toggleScript,
     };
 }

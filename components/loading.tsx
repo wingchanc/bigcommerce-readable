@@ -1,12 +1,11 @@
 import { Flex, H3, Panel, ProgressCircle } from '@bigcommerce/big-design';
 
 const Loading = () => (
-    <Panel>
-        <H3>Loading...</H3>
+    // <Panel>
         <Flex justifyContent="center" alignItems="center">
             <ProgressCircle size="large" />
         </Flex>
-    </Panel>
+    // </Panel>
 );
 
 export default Loading;

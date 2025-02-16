@@ -1,6 +1,5 @@
-import { Box as MuiBox, Container, Grid, Typography, Paper } from '@mui/material';
-import { AccessibilityNew, Navigation, RecordVoiceOver, TextFields } from '@mui/icons-material';
-import { Box, Flex, H4, Panel, Switch } from "@bigcommerce/big-design";
+import { Box, Flex, H1, H2, H3, Panel, Switch, Text } from "@bigcommerce/big-design";
+import { CheckCircleIcon, LanguageIcon, SettingsIcon, VisibilityIcon } from "@bigcommerce/big-design-icons";
 import ErrorMessage from "../components/error";
 import Loading from "../components/loading";
 import { useScripts } from "../lib/hooks";
@@ -19,109 +18,128 @@ const Index = () => {
     await toggleScript(readableScript?.uuid, event.target.checked);
   };
 
-  return (
-    <Container maxWidth="lg">
-      {/* Hero Section */}
-      <MuiBox sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h2" component="h1" gutterBottom>
-          Welcome to Readable
-        </Typography>
-        <Typography variant="h5" color="text.secondary" paragraph>
-          Enhance web accessibility and create an inclusive reading experience for everyone
-        </Typography>
+  const iconProps = {
+    size: "large",
+    color: "primary60"
+  };
 
-        {/* Enable Toggle Section - Moved here */}
-        <MuiBox sx={{ mt: 4 }}>
-          <Paper sx={{ p: 3, display: 'inline-block', minWidth: '300px' }}>
+  return (
+    <Box marginHorizontal="xxxLarge">
+      {/* Hero Section */}
+      <Box marginVertical="xxxLarge" marginBottom="xxLarge">
+        <Box marginBottom="large">
+          <Flex justifyContent="center">
+            <H1>Welcome to Readable</H1>
+          </Flex>
+          <Flex justifyContent="center">
+            <Text color="secondary">
+              Enhance web accessibility and create an inclusive reading experience for everyone
+            </Text>
+          </Flex>
+        </Box>
+
+        {/* Enable Toggle Section */}
+        <Box marginTop="large">
+          <Panel>
             <Flex justifyContent="space-between" alignItems="center">
-              <H4>Enable on storefront</H4>
+              <H3>Enable on storefront</H3>
               <Switch
                 checked={readableScript?.enabled ?? false}
                 onChange={handleToggle}
               />
             </Flex>
-          </Paper>
-        </MuiBox>
-      </MuiBox>
+          </Panel>
+        </Box>
+      </Box>
 
       {/* Feature Grid */}
-      <Grid container spacing={4} sx={{ mb: 8 }}>
-        {/* WCAG Accessibility */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 4, height: '100%' }}>
-            <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <AccessibilityNew sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" component="h2">
-                WCAG Accessibility
-              </Typography>
-            </MuiBox>
-            <Typography color="text.secondary">
-              Built following Web Content Accessibility Guidelines (WCAG) to ensure 
-              a universally accessible web experience.
-            </Typography>
-          </Paper>
-        </Grid>
+      <Box marginBottom="xxxLarge">
+        <Flex flexDirection="row" flexWrap="wrap" justifyContent="space-between">
+          {/* WCAG Accessibility */}
+          <Box marginBottom="large" style={{ width: '45%' }}>
+            <Panel>
+              <Box padding="medium">
+                <Flex alignItems="center" marginBottom="xSmall">
+                  <Box marginRight="small">
+                    <CheckCircleIcon {...iconProps} />
+                  </Box>
+                  <H3 marginBottom="none">WCAG Accessibility</H3>
+                </Flex>
+                <Text color="secondary">
+                  Built following Web Content Accessibility Guidelines (WCAG) to ensure 
+                  a universally accessible web experience.
+                </Text>
+              </Box>
+            </Panel>
+          </Box>
 
-        {/* Personalized Settings */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 4, height: '100%' }}>
-            <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <TextFields sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" component="h2">
-                Personalized Settings
-              </Typography>
-            </MuiBox>
-            <Typography color="text.secondary">
-              Customize text scaling, line spacing, and font styles for an optimized 
-              reading experience tailored to your preferences.
-            </Typography>
-          </Paper>
-        </Grid>
+          {/* Personalized Settings */}
+          <Box marginBottom="large" style={{ width: '45%' }}>
+            <Panel>
+              <Box padding="medium">
+                <Flex alignItems="center" marginBottom="xSmall">
+                  <Box marginRight="small">
+                    <SettingsIcon {...iconProps} />
+                  </Box>
+                  <H3 marginBottom="none">Personalized Settings</H3>
+                </Flex>
+                <Text color="secondary">
+                  Customize text scaling, line spacing, and font styles for an optimized 
+                  reading experience tailored to your preferences.
+                </Text>
+              </Box>
+            </Panel>
+          </Box>
 
-        {/* Navigation Features */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 4, height: '100%' }}>
-            <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Navigation sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" component="h2">
-                Effortless Navigation
-              </Typography>
-            </MuiBox>
-            <Typography color="text.secondary">
-              Enhanced navigation with link identification, flicker-free modes, 
-              and improved mouse navigation with large cursors.
-            </Typography>
-          </Paper>
-        </Grid>
+          {/* Navigation Features */}
+          <Box marginBottom="large" style={{ width: '45%' }}>
+            <Panel>
+              <Box padding="medium">
+                <Flex alignItems="center" marginBottom="xSmall">
+                  <Box marginRight="small">
+                    <VisibilityIcon {...iconProps} />
+                  </Box>
+                  <H3 marginBottom="none">Effortless Navigation</H3>
+                </Flex>
+                <Text color="secondary">
+                  Enhanced navigation with link identification, flicker-free modes, 
+                  and improved mouse navigation with large cursors.
+                </Text>
+              </Box>
+            </Panel>
+          </Box>
 
-        {/* Text-to-Speech */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 4, height: '100%' }}>
-            <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <RecordVoiceOver sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
-              <Typography variant="h5" component="h2">
-                Text-to-Speech
-              </Typography>
-            </MuiBox>
-            <Typography color="text.secondary">
-              Enable Text-to-Speech with support for over 60 languages, providing 
-              spoken versions of web content for users with visual impairments.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+          {/* Text-to-Speech */}
+          <Box marginBottom="large" style={{ width: '45%' }}>
+            <Panel>
+              <Box padding="medium">
+                <Flex alignItems="center" marginBottom="xSmall">
+                  <Box marginRight="small">
+                    <LanguageIcon {...iconProps} />
+                  </Box>
+                  <H3 marginBottom="none">Text-to-Speech</H3>
+                </Flex>
+                <Text color="secondary">
+                  Enable Text-to-Speech with support for over 60 languages, providing 
+                  spoken versions of web content for users with visual impairments.
+                </Text>
+              </Box>
+            </Panel>
+          </Box>
+        </Flex>
+      </Box>
 
       {/* Additional Info */}
-      <MuiBox sx={{ py: 4, textAlign: 'center' }}>
-        <Typography variant="h6" gutterBottom>
-          Privacy-Focused & Compliant
-        </Typography>
-        <Typography color="text.secondary">
-          GDPR and CCPA compliant, saving user preferences without compromising privacy.
-          Compatible with all modern browsers and websites.
-        </Typography>
-      </MuiBox>
-    </Container>
+      <Box marginVertical="xxLarge">
+        <Flex flexDirection="column" alignItems="center">
+          <H3>Privacy-Focused & Compliant</H3>
+          <Text color="secondary">
+            GDPR and CCPA compliant, saving user preferences without compromising privacy.
+            Compatible with all modern browsers and websites.
+          </Text>
+        </Flex>
+      </Box>
+    </Box>
   );
 };
 

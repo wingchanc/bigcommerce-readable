@@ -1,12 +1,15 @@
-import { Box, Flex, H1, H2, H3, Panel, Switch, Text } from "@bigcommerce/big-design";
+import { Box, Flex, H1, H2, H3, Panel, Switch, Text, Button } from "@bigcommerce/big-design";
 import { CheckCircleIcon, LanguageIcon, SettingsIcon, VisibilityIcon } from "@bigcommerce/big-design-icons";
 import ErrorMessage from "../components/error";
 import Loading from "../components/loading";
 import { useScripts } from "../lib/hooks";
-import { ChangeEvent } from "react";
+import { useSession } from "../context/session";
+import { ChangeEvent, useState } from "react";
 
 const Index = () => {
   const { error, isLoading, scripts, toggleScript } = useScripts();
+  const { context } = useSession();
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage error={error} />;
@@ -16,6 +19,34 @@ const Index = () => {
 
   const handleToggle = async (event: ChangeEvent<HTMLInputElement>) => {
     await toggleScript(readableScript?.uuid, event.target.checked);
+  };
+
+  const handleUpgrade = async () => {
+    try {
+      setIsUpgrading(true);
+      const response = await fetch(`/api/upgrade?context=${context}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
+
+      // Redirect to the checkout URL
+      if (data.data?.createCheckout?.checkout?.redirectUrl) {
+        window.location.href = data.data.createCheckout.checkout.redirectUrl;
+      }
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   const iconProps = {
@@ -49,6 +80,19 @@ const Index = () => {
               />
             </Flex>
           </Panel>
+        </Box>
+
+        {/* Upgrade Button */}
+        <Box marginTop="medium">
+          <Flex justifyContent="center">
+            <Button
+              isLoading={isUpgrading}
+              onClick={handleUpgrade}
+              variant="primary"
+            >
+              Upgrade to Premium
+            </Button>
+          </Flex>
         </Box>
       </Box>
 

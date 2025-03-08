@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           items: [
             {
               product: {
-                id: "bc/account/product/111",
+                id: "bc/account/product/57770",
                 type: "APPLICATION",
                 productLevel: "Basic"
               },

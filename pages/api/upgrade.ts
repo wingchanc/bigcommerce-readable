@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '../../lib/auth';
+import { handleApiError } from '../../lib/api-helpers';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,12 +9,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const session = await getSession(req);
+    console.log('Session:', session);
     if (!session?.accessToken) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized', redirectTo: '/session-expired' });
     }
 
     const accountId = process.env.ACCOUNT_UUID;
     const accessToken = process.env.SUBSCRIPTION_ACCESS_TOKEN;
+    const { storeHash } = session;
 
     const payload = {
       query: `
@@ -68,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 productLevel: "Basic"
               },
               scope: {
-                id: `bc/account/scope/${accountId}`,
+                id: `bc/account/scope/${storeHash}`,
                 type: "STORE"
               },
               pricingPlan: {
@@ -80,21 +83,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 trialDays: 0
               },
               description: "App Subscription - Basic",
-              redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade_success?context=${req.query.context}`
+              redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade-success`
             }
           ]
         }
       }
     };
 
-    console.log('Request payload:', JSON.stringify(payload, null, 2));
-    console.log('Headers:', {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-      'X-Auth-Token': accessToken
-    });
-
-    const response = await fetch(`https://api.bigcommerce.com/accounts/${accountId}/graphql`, {
+    // Debug request
+    const requestConfig = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,10 +99,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'X-Auth-Token': accessToken
       },
       body: JSON.stringify(payload)
+    };
+
+    console.log('Request config:', {
+      url: `https://api.bigcommerce.com/accounts/${accountId}/graphql`,
+      method: requestConfig.method,
+      headers: {
+        ...requestConfig.headers,
+        'Authorization': '[REDACTED]',
+        'X-Auth-Token': '[REDACTED]'
+      },
+      payload: JSON.stringify(payload, null, 2)
     });
 
+    const response = await fetch(`https://api.bigcommerce.com/accounts/${accountId}/graphql`, requestConfig);
     const data = await response.json();
-    console.log('Response data:', JSON.stringify(data, null, 2));
+
+    // Debug response
+    console.log('Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      data: JSON.stringify(data, null, 2)
+    });
     
     if (data.errors) {
       throw new Error(data.errors[0].message);
@@ -113,7 +129,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(data);
   } catch (error) {
-    console.error('Upgrade error:', error);
-    return res.status(500).json({ error: 'Failed to process upgrade request' });
+    return handleApiError(error, res);
   }
 } 

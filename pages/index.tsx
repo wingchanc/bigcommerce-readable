@@ -38,8 +38,9 @@ const Index = () => {
       }
 
       // Redirect to the checkout URL
-      if (data.data?.createCheckout?.checkout?.redirectUrl) {
-        window.location.href = data.data.createCheckout.checkout.redirectUrl;
+      const checkoutUrl = data.data.checkout.createCheckout.checkout.checkoutUrl;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
       }
     } catch (error) {
       console.error('Upgrade failed:', error);
@@ -89,8 +90,9 @@ const Index = () => {
               isLoading={isUpgrading}
               onClick={handleUpgrade}
               variant="primary"
+              disabled={true}
             >
-              Upgrade to Premium
+              Upgrade to Premium (Coming Soon)
             </Button>
           </Flex>
         </Box>

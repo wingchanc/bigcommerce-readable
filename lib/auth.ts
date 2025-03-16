@@ -59,17 +59,25 @@ export function setSession(session: SessionProps) {
 
 export async function getSession({ query: { context = '' } }: NextApiRequest) {
     if (typeof context !== 'string') return;
-    const { context: storeHash, user } = decodePayload(context);
-    const hasUser = await db.hasStoreUser(storeHash, user?.id);
+    
+    try {
+        const { context: storeHash, user } = decodePayload(context);
+        const hasUser = await db.hasStoreUser(storeHash, user?.id);
 
-    // Before retrieving session/ hitting APIs, check user
-    if (!hasUser) {
-        throw new Error('User is not available. Please login or ensure you have access permissions.');
+        // Before retrieving session/ hitting APIs, check user
+        if (!hasUser) {
+            throw new Error('User is not available. Please login or ensure you have access permissions.');
+        }
+
+        const accessToken = await db.getStoreToken(storeHash);
+
+        return { accessToken, storeHash, user };
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            throw new Error('jwt expired');
+        }
+        throw error;
     }
-
-    const accessToken = await db.getStoreToken(storeHash);
-
-    return { accessToken, storeHash, user };
 }
 
 // JWT functions to sign/ verify 'context' query param from /api/auth||load
@@ -79,9 +87,17 @@ export function encodePayload({ user, owner, ...session }: SessionProps) {
 
     return jwt.sign({ context, user, owner }, JWT_KEY, { expiresIn: '24h' });
 }
+
 // Verifies JWT for getSession (product APIs)
 export function decodePayload(encodedContext: string) {
-    return jwt.verify(encodedContext, JWT_KEY);
+    try {
+        return jwt.verify(encodedContext, JWT_KEY);
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            throw new Error('jwt expired');
+        }
+        throw error;
+    }
 }
 
 // Removes store and storeUser on uninstall

@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 trialDays: 0
               },
               description: "App Subscription - Basic",
-              redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade-success?context=${req.query.context}`
+              redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade-success`
             }
           ]
         }

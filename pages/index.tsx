@@ -116,6 +116,8 @@ const Index = () => {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [activeTab, setActiveTab] = useState("base");
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedConfig, setLastSavedConfig] = useState<ConfigState | null>(null);
   const [config, setConfig] = useState<ConfigState>({
     path: './readabler',
     disableOnMobile: false,
@@ -232,6 +234,7 @@ const Index = () => {
             ...prev,
             ...savedConfig
           }));
+          setLastSavedConfig(savedConfig);
         }
       } catch (error) {
         console.error('Error loading config:', error);
@@ -243,35 +246,34 @@ const Index = () => {
     }
   }, [context]);
 
-  // Save config whenever it changes
-  useEffect(() => {
-    const saveConfig = async () => {
-      try {
-        setIsSaving(true);
-        const response = await fetch(`/api/config?context=${context}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ config }),
-        });
-        if (!response.ok) {
-          throw new Error('Failed to save configuration');
-        }
-      } catch (error) {
-        console.error('Error saving config:', error);
-      } finally {
-        setIsSaving(false);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const response = await fetch(`/api/config?context=${context}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ config }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save configuration');
       }
-    };
-
-    // Only save if we have a context and config has been loaded
-    if (context) {
-      // Debounce save to avoid too many requests
-      const timeoutId = setTimeout(saveConfig, 1000);
-      return () => clearTimeout(timeoutId);
+      setHasUnsavedChanges(false);
+      setLastSavedConfig(config);
+    } catch (error) {
+      console.error('Error saving config:', error);
+    } finally {
+      setIsSaving(false);
     }
-  }, [config, context]);
+  };
+
+  const handleReset = () => {
+    if (lastSavedConfig) {
+      setConfig(lastSavedConfig);
+      setHasUnsavedChanges(false);
+    }
+  };
 
   useEffect(() => {
     const checkSubscription = async () => {
@@ -346,6 +348,7 @@ const Index = () => {
       ...prev,
       [field]: value
     }));
+    setHasUnsavedChanges(true);
   };
 
   const handleSwitchChange = (field: keyof ConfigState) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -353,6 +356,7 @@ const Index = () => {
       ...prev,
       [field]: event.target.checked
     }));
+    setHasUnsavedChanges(true);
   };
 
   const handleRadioChange = (field: keyof ConfigState) => (value: string) => {
@@ -360,6 +364,7 @@ const Index = () => {
       ...prev,
       [field]: value
     }));
+    setHasUnsavedChanges(true);
   };
 
   const handleSelectChange = (field: keyof ConfigState) => (value?: string) => {
@@ -368,6 +373,7 @@ const Index = () => {
         ...prev,
         [field]: value
       }));
+      setHasUnsavedChanges(true);
     }
   };
 
@@ -378,6 +384,7 @@ const Index = () => {
         ...prev,
         [field]: value
       }));
+      setHasUnsavedChanges(true);
     }
   };
 
@@ -636,11 +643,36 @@ const Index = () => {
         {/* Configuration Section */}
         <Box marginTop="xxLarge">
           <Panel header="Readable Configuration">
-            {isSaving && (
-              <Text color="secondary" marginBottom="medium">
-                Saving changes...
-              </Text>
-            )}
+            <Box marginBottom="medium">
+              {isSaving && (
+                <Text color="secondary">
+                  Saving changes...
+                </Text>
+              )}
+              {hasUnsavedChanges && !isSaving && (
+                <Text color="danger">
+                  You have unsaved changes
+                </Text>
+              )}
+              <Flex justifyContent="flex-end" alignItems="center">
+                <Box marginRight="small">
+                  <Button
+                    variant="subtle"
+                    onClick={handleReset}
+                    disabled={!hasUnsavedChanges || isSaving}
+                  >
+                    Reset Changes
+                  </Button>
+                </Box>
+                <Button
+                  variant="primary"
+                  onClick={handleSave}
+                  disabled={!hasUnsavedChanges || isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </Flex>
+            </Box>
             <Box style={{ position: 'relative' }}>
               {!hasSubscription && (
                 <Box

@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               product: {
                 id: "bc/account/product/57770",
                 type: "APPLICATION",
-                productLevel: "Basic"
+                productLevel: "Plus"
               },
               scope: {
                 id: `bc/account/scope/${storeHash}`,
@@ -77,18 +77,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               pricingPlan: {
                 interval: "MONTH",
                 price: {
-                  value: 30.00,
+                  value: 19.99,
                   currencyCode: "USD"
                 },
                 trialDays: 0
               },
-              description: "App Subscription - Basic",
+              description: "App Subscription - Plus",
               redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade-success`
             }
           ]
         }
       }
     };
+
+    // if in local host, set amount to 0
+    if (process.env.NODE_ENV === 'development') {
+      payload.variables.checkout.items[0].pricingPlan.price.value = 0;
+    }
 
     // Debug request
     const requestConfig = {

@@ -1,17 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { bigcommerceClient, getSession } from '../../lib/auth';
 
-const READABLE_SCRIPT_CONFIG = {
+const getReadableScriptConfig = (storeHash: string) => ({
     name: "Readable",
     description: "Readable script for BigCommerce",
-    src: "https://js.certifiedcode.io/bigcommerce-readable/app.js",
+    src: `https://js.certifiedcode.io/bigcommerce-readable/app.js?storeId=${storeHash}`,
     auto_uninstall: true,
     load_method: "default",
     location: "head",
     visibility: "storefront",
     kind: "src",
     consent_category: "essential"
-};
+});
 
 export default async function scripts(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req;
@@ -19,6 +19,7 @@ export default async function scripts(req: NextApiRequest, res: NextApiResponse)
     try {
         const { accessToken, storeHash } = await getSession(req);
         const bigcommerce = bigcommerceClient(accessToken, storeHash);
+        const scriptConfig = getReadableScriptConfig(storeHash);
 
         switch (method) {
             case 'GET':
@@ -32,14 +33,14 @@ export default async function scripts(req: NextApiRequest, res: NextApiResponse)
                 if (scriptId) {
                     // Update existing script
                     const { data: updatedScript } = await bigcommerce.put(`/content/scripts/${scriptId}`, {
-                        ...READABLE_SCRIPT_CONFIG,
+                        ...scriptConfig,
                         enabled
                     });
                     res.status(200).json(updatedScript);
                 } else if (enabled) {
                     // Create new script if enabled is true and no scriptId provided
                     const { data: newScript } = await bigcommerce.post('/content/scripts', {
-                        ...READABLE_SCRIPT_CONFIG,
+                        ...scriptConfig,
                         enabled: true
                     });
                     res.status(201).json(newScript);

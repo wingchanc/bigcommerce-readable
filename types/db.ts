@@ -6,6 +6,12 @@ export interface StoreData {
     storeHash: string;
 }
 
+export interface ConfigData {
+    storeHash: string;
+    config: Record<string, any>;
+    updatedAt?: Date;
+}
+
 export interface UserData {
     email: string;
     username?: string;
@@ -19,4 +25,6 @@ export interface Db {
     getStoreToken(storeId: string): Promise<string> | null;
     deleteStore(session: SessionProps): Promise<void>;
     deleteUser(session: SessionProps): Promise<void>;
+    getConfig(storeHash: string): Promise<Record<string, any> | null>;
+    setConfig(storeHash: string, config: Record<string, any>): Promise<void>;
 }

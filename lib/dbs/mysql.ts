@@ -65,30 +65,39 @@ export async function setStoreUser(session: SessionProps) {
     }
 }
 
-export async function deleteUser({ context, user, sub }: SessionProps) {
-    const contextString = context ?? sub;
-    const storeHash = contextString?.split('/')[1] || '';
-    const values = [String(user?.id), storeHash];
-    await query('DELETE FROM storeUsers WHERE userId = ? AND storeHash = ?', values);
+export async function deleteUser(session: SessionProps) {
+    const { user } = session;
+    if (!user) return null;
+    await query('DELETE FROM users WHERE userId = ?', user.id);
 }
 
-export async function hasStoreUser(storeHash: string, userId: string) {
-    if (!storeHash || !userId) return false;
-
-    const values = [userId, storeHash];
-    const results = await query('SELECT * FROM storeUsers WHERE userId = ? AND storeHash = ? LIMIT 1', values);
-
-    return results.length > 0;
+export async function hasStoreUser(storeHash: string, userId: string): Promise<boolean> {
+    const [result] = await query(
+        'SELECT 1 FROM storeUsers WHERE storeHash = ? AND userId = ?',
+        [storeHash, userId]
+    );
+    return !!result;
 }
 
-export async function getStoreToken(storeHash: string) {
-    if (!storeHash) return null;
-
-    const results = await query('SELECT accessToken FROM stores WHERE storeHash = ?', storeHash);
-
-    return results.length ? results[0].accessToken : null;
+export async function getStoreToken(storeHash: string): Promise<string | null> {
+    const [result] = await query('SELECT accessToken FROM stores WHERE storeHash = ?', [storeHash]);
+    return result ? result.accessToken : null;
 }
 
 export async function deleteStore({ store_hash: storeHash }: SessionProps) {
     await query('DELETE FROM stores WHERE storeHash = ?', storeHash);
+}
+
+export async function getConfig(storeHash: string): Promise<Record<string, any> | null> {
+    const [result] = await query('SELECT config FROM configs WHERE storeHash = ?', [storeHash]);
+    if (!result) return null;
+    return JSON.parse(result.config);
+}
+
+export async function setConfig(storeHash: string, config: Record<string, any>): Promise<void> {
+    const configString = JSON.stringify(config);
+    await query(
+        'INSERT INTO configs (storeHash, config) VALUES (?, ?) ON DUPLICATE KEY UPDATE config = ?',
+        [storeHash, configString, configString]
+    );
 }

@@ -47,6 +47,18 @@ export async function setStore(session: SessionProps) {
     await setDoc(ref, data);
 }
 
+export async function getConfig(storeHash: string): Promise<Record<string, any> | null> {
+    const ref = doc(db, 'configs', storeHash);
+    const snapshot = await getDoc(ref);
+    if (!snapshot.exists()) return null;
+    return snapshot.data().config;
+}
+
+export async function setConfig(storeHash: string, config: Record<string, any>): Promise<void> {
+    const ref = doc(db, 'configs', storeHash);
+    await setDoc(ref, { config, updatedAt: new Date() }, { merge: true });
+}
+
 // User management for multi-user apps
 // Use setStoreUser for storing store specific variables
 export async function setStoreUser(session: SessionProps) {
